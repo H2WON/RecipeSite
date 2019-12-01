@@ -1,0 +1,70 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ page import="java.sql.*"%>
+<%@ page import="java.util.*"%>
+<%@page import="java.text.SimpleDateFormat"%>
+<%
+	request.setCharacterEncoding("UTF-8");
+	
+	String login = (String)session.getAttribute("Login");
+	String userid = (String)session.getAttribute("UserID");
+
+	int recipesenseno = Integer.parseInt(request.getParameter("recipesenseno"));
+	
+	String RecipeCommentContent = request.getParameter("RecipeSenseCommentContent");
+	Timestamp register = new Timestamp(System.currentTimeMillis());
+%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<%
+	request.setCharacterEncoding("UTF-8"); //한글깨지지말라고
+	
+	String sqlInsertRecipeComment = "INSERT INTO RecipeSenseComment(RecipeSenseComment_Content,RecipeSenseComment_Date,RecipeSenseComment_Writer,RecipeSense_Id) values(?,?,?,?)";
+	
+	Connection conn = null;
+	ResultSet rs = null;
+	PreparedStatement pstmt = null;
+	
+	try {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		Calendar cal = Calendar.getInstance();
+		
+		String jdbcUrl = "jdbc:mysql://localhost:3306/jsptest?useUnicode=true&characterEncoding=utf8"; //db경로설정
+		String dbId = "jspid"; //dbid설정
+		String dbPass = "jsppass"; //db비밀번호 설정
+
+		Class.forName("com.mysql.jdbc.Driver");
+		conn = DriverManager.getConnection(jdbcUrl, dbId, dbPass); 
+		
+		pstmt = conn.prepareStatement(sqlInsertRecipeComment);
+		pstmt.setString(1,RecipeCommentContent);
+		pstmt.setString(2,sdf.format(cal.getTime()));
+		pstmt.setString(3,userid);
+		pstmt.setInt(4,recipesenseno);
+		pstmt.executeUpdate();
+		
+		pstmt.close();
+		
+		System.out.println("성공");
+		
+		response.sendRedirect("RecipeSenseShow.jsp?recipesenseno="+recipesenseno);
+	
+	} catch (SQLException sql) {
+			sql.printStackTrace();
+	} finally {
+		try {
+			if (rs != null) rs.close();
+			if (pstmt != null) pstmt.close();
+			if (conn != null) conn.close();
+		} catch (SQLException sql) {
+			System.out.println(sql.getMessage());
+		}
+	}
+%>
+</body>
+</html>
